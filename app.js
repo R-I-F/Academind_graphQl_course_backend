@@ -1,7 +1,9 @@
+require('dotenv').config();
 const express = require('express');
 const app = express();
 const feedRoutes = require('./routes/feed');
 const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
 
 app.use(bodyParser.json());
 
@@ -14,4 +16,8 @@ app.use((req, res, next)=>{
 
 app.use('/feed', feedRoutes);
 
-app.listen(8080);
+app.connect(process.env.DRIVER_URL)
+.then((result) => { 
+    app.listen(8080);
+ })
+.catch((err) => { console.log(err); });
