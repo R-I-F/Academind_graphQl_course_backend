@@ -16,6 +16,8 @@ exports.getPosts = (req, res, next)=>{
 };
 
 exports.createPost = (req, res, next)=>{
+    const image = req.file;
+    console.log(image);
     const errors = validationResult(req);
     if(!errors.isEmpty()){
         const error = new Error('Post validation failed');
@@ -26,7 +28,7 @@ exports.createPost = (req, res, next)=>{
     const content = req.body.content;
     const newPost = new Post({
         title: title,
-        imageUrl: '/images/book.jpg',
+        imageUrl: image.path,
         content: content,
         creator: { name: 'ibrahim ahmed' }
     })
