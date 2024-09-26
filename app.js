@@ -16,7 +16,7 @@ app.use((req, res, next)=>{
 
 app.use('/feed', feedRoutes);
 
-app.connect(process.env.DRIVER_URL)
+mongoose.connect(process.env.DRIVER_URL2)
 .then((result) => { 
     app.listen(8080);
  })
