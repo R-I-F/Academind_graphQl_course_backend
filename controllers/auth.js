@@ -1,6 +1,7 @@
 const { validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const User = require('../models/user');
+const jwt = require('jsonwebtoken');
 
 exports.signup = (req, res, next)=>{
     const errors = validationResult(req);
@@ -29,6 +30,41 @@ exports.signup = (req, res, next)=>{
         .catch((err) => {
             if(!err.statusCode){
                 err.statusCode = 500 ; 
+            }
+            next(err);
+        });
+};
+
+exports.postLogin = (req, res, next)=>{
+    const email = req.body.email;
+    const password = req.body.password;
+    let loadedUser;
+
+    User.findOne({email: email})
+        .then((user) => {
+            if(!user){
+                const error = new Error('Wrong credentials');
+                error.statusCode = 401 // 401 is for unauthorized
+                throw error;
+            }
+            loadedUser = user;
+            return bcrypt.compare(password, user.password)            
+        })
+        .then((doMatch)=>{
+            if(!doMatch){
+                const error = new Error('Wrong credentials');
+                error.statusCode = 401 // 401 is for unauthorized
+                throw error;
+            }
+            const token = jwt.sign({
+                email: email,
+                userId: loadedUser._id.toString()
+            }, 'secret', {expiresIn: '1h'});
+            res.status(200).json({token: token, userId: loadedUser._id.toString()})
+        })
+        .catch((err) => {
+            if(!err.statusCode){
+                err.statusCode = 500; 
             }
             next(err);
         });
