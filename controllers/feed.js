@@ -29,9 +29,7 @@ exports.getPosts = (req, res, next)=>{
 };
 
 exports.createPost = (req, res, next)=>{
-    console.log(req.userId);
     const image = req.file;
-    console.log(image);
     const errors = validationResult(req);
     if(!errors.isEmpty()){
         const error = new Error('Post validation failed');
@@ -120,6 +118,11 @@ exports.updatePost = (req, res, next)=>{
         if(imageUrl !== post.imageUrl){
             clearImage(post.imageUrl);
         }
+        if(post.creator.toString() !== req.userId){
+            const error = new Error('Updating post failed');
+            error.statusCode = 403; // 403 means forbidden
+            throw error ;
+        }
         post.title = title;
         post.content = content;
         post.imageUrl = imageUrl;
@@ -137,10 +140,14 @@ exports.updatePost = (req, res, next)=>{
 };
 
 exports.deletePost = (req, res, next)=>{
-    console.log('deleting post');
     const postId = req.params.postId;
     Post.findById(postId)
         .then((post) => {
+            if(post.creator.toString() !== req.userId){
+                const error = new Error('Deleting post failed');
+                error.statusCode = 403; // 403 means forbidden
+                throw error ;
+            }
             if(!post){
                 const error = new Error('Post not found');
                 error.statusCode = 404;
@@ -148,6 +155,13 @@ exports.deletePost = (req, res, next)=>{
             }
             clearImage(post.imageUrl);
             return Post.findByIdAndDelete(postId);
+        })
+        .then((result) => {
+            return User.findById(req.userId)
+        })
+        .then((user) => {
+            user.posts.pull(postId)
+            return user.save()
         })
         .then((result) => {
             res.status(200).json({message: "Post deleted successfully."})
