@@ -50,12 +50,7 @@ app.use((error, req, res, next)=>{
 mongoose.connect(process.env.DRIVER_URL2)
 .then((result) => { 
     const server = app.listen(8080);
-    const io = require('socket.io')(server, {
-        cors: {
-            origin: "http://localhost:3000",
-            methods: ["GET", "POST"]
-        }
-    });
+    const io = require('./socket').init(server);
     io.on('connection', (socket)=>{
         console.log('client connected');
     })

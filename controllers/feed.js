@@ -3,6 +3,7 @@ const Post = require('../models/post');
 const User = require('../models/user');
 const fs = require('fs');
 const path = require('path')
+const io = require('../socket');
 
 exports.getPosts = (req, res, next)=>{
     const currentPage = req.query.page || 1;
@@ -29,7 +30,7 @@ exports.getPosts = (req, res, next)=>{
         });
 };
 
-exports.createPost = (req, res, next)=>{
+exports.createPost = async (req, res, next)=>{
     const image = req.file;
     const errors = validationResult(req);
     if(!errors.isEmpty()){
@@ -47,29 +48,27 @@ exports.createPost = (req, res, next)=>{
         content: content,
         creator: req.userId
     })
-    newPost.save()
-        .then((newPost)=>{
-            post = newPost;
-            return User.findById(req.userId)
+    try {
+        await newPost.save();
+        const user = await User.findById(req.userId);
+        user.posts.push(newPost);
+        await user.save();
+        io.getIO().emit('posts', {
+            action: 'create',
+            post: newPost
         })
-        .then((user) => {
-            creator = user;
-            user.posts.push(post._id)
-            return user.save()
+        res.status(201).json({
+            message: 'Post created successfully !',
+            post: newPost,
+            creator: {_id: user._id, name: user.name}
         })
-        .then((result)=>{
-            res.status(201).json({
-                message: 'Post created successfully !',
-                post: post,
-                creator: {_id: creator._id, name: creator._name}
-            })
-        })
-        .catch((err) => {
+    }
+    catch(err){
             if(!err.statusCode){
                 err.statusCode = 500;
             }
             next(err);
-        });
+    };
 };
 
 exports.getPost = (req, res, next)=>{
