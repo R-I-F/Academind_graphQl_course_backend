@@ -40,8 +40,6 @@ exports.createPost = async (req, res, next)=>{
     }
     const title = req.body.title;
     const content = req.body.content;
-    let post;
-    let creator;
     const newPost = new Post({
         title: title,
         imageUrl: image.path.replace(/\\/g, '/'),
@@ -49,13 +47,13 @@ exports.createPost = async (req, res, next)=>{
         creator: req.userId
     })
     try {
-        await newPost.save();
+        const resultPost = await newPost.save();
         const user = await User.findById(req.userId);
         user.posts.push(newPost);
         await user.save();
         io.getIO().emit('posts', {
             action: 'create',
-            post: newPost
+            post: {...resultPost._doc, creator: {_id: req.userId, name: user.name}}
         })
         res.status(201).json({
             message: 'Post created successfully !',
