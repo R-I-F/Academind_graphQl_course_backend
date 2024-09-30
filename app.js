@@ -7,8 +7,6 @@ const mongoose = require('mongoose');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 const cors = require('cors');
-const feedRoutes = require('./routes/feed');
-const authRoutes = require('./routes/auth');
 
 app.use(cors());
 
@@ -36,9 +34,6 @@ app.use(multer({ storage: fileStorage, fileFilter: fileFilter}).single('image'))
 
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
-app.use('/feed', feedRoutes);
-app.use('/auth', authRoutes);
-
 app.use((error, req, res, next)=>{
     console.log(error);
     const status = error.statusCode || 500;
@@ -49,10 +44,6 @@ app.use((error, req, res, next)=>{
 
 mongoose.connect(process.env.DRIVER_URL2)
 .then((result) => { 
-    const server = app.listen(8080);
-    const io = require('./socket').init(server);
-    io.on('connection', (socket)=>{
-        console.log('client connected');
-    })
+    app.listen(8080);
  })
 .catch((err) => { console.log(err); });
