@@ -87,7 +87,7 @@ exports.getPost = (req, res, next)=>{
 
 };
 
-exports.updatePost = (req, res, next)=>{
+exports.updatePost = async (req, res, next)=>{
     const postId = req.params.postId;
     const title = req.body.title;
     const content = req.body.content;
@@ -106,35 +106,40 @@ exports.updatePost = (req, res, next)=>{
         error.statusCode = 422;
         throw error;
     }
-    Post.findById(postId)
-    .then((post) => {
-        if(!post){
-            const error = new Error('no post found');
-            error.statusCode = 404;
-            throw error
-        }
-        if(imageUrl !== post.imageUrl){
-            clearImage(post.imageUrl);
-        }
-        if(post.creator.toString() !== req.userId){
-            const error = new Error('Updating post failed');
-            error.statusCode = 403; // 403 means forbidden
-            throw error ;
-        }
-        post.title = title;
-        post.content = content;
-        post.imageUrl = imageUrl;
-        return post.save();
-    })
-    .then((result)=>{
-        res.status(200).json({ message: 'Post updated successfully', post: result });
-    })
-    .catch((err) => {
+
+    try{
+        const post = await Post.findById(postId).populate('creator');
+
+            if(!post){
+                const error = new Error('no post found');
+                error.statusCode = 404;
+                throw error
+            }
+
+            if(imageUrl !== post.imageUrl){
+                clearImage(post.imageUrl);
+            }
+
+            if(post.creator._id.toString() !== req.userId){
+                const error = new Error('Updating post failed');
+                error.statusCode = 403; // 403 means forbidden
+                throw error ;
+            }
+            post.title = title;
+            post.content = content;
+            post.imageUrl = imageUrl;
+
+            const result = await post.save();
+
+            io.getIO().emit('posts', {action: 'update', post: result });
+            res.status(200).json({ message: 'Post updated successfully', post: result });
+    }
+    catch(err) {
         if(!err.statusCode){
             err.statusCode = 500;
         }
         next(err);
-    });
+    };
 };
 
 exports.deletePost = (req, res, next)=>{
