@@ -6,15 +6,13 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
+const cors = require('cors');
 const feedRoutes = require('./routes/feed');
 const authRoutes = require('./routes/auth');
 
-app.use((req, res, next)=>{
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    next();    
-});
+app.use(cors());
+
+
 
 const fileStorage = multer.diskStorage({
     destination: (req, file, cb)=>{
@@ -51,6 +49,15 @@ app.use((error, req, res, next)=>{
 
 mongoose.connect(process.env.DRIVER_URL2)
 .then((result) => { 
-    app.listen(8080);
+    const server = app.listen(8080);
+    const io = require('socket.io')(server, {
+        cors: {
+            origin: "http://localhost:3000",
+            methods: ["GET", "POST"]
+        }
+    });
+    io.on('connection', (socket)=>{
+        console.log('client connected');
+    })
  })
 .catch((err) => { console.log(err); });
