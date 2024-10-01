@@ -20,6 +20,7 @@ app.use(cors());
 app.use('/graphql', graphqlHTTP({
     schema: graphqlSchema,
     rootValue: graphqlResolver,
+    graphiql: true,
 }))
 
 const fileStorage = multer.diskStorage({
