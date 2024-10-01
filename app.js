@@ -7,10 +7,20 @@ const mongoose = require('mongoose');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 const cors = require('cors');
+<<<<<<< HEAD
+=======
+const { graphqlHTTP } = require('express-graphql');
+const graphqlSchema = require('./graphql/schema');
+const graphqlResolver = require('./graphql/resolvers');
+
+>>>>>>> module_28
 
 app.use(cors());
 
-
+app.use('/graphql', graphqlHTTP({
+    schema: graphqlSchema,
+    rootValue: graphqlResolver,
+}))
 
 const fileStorage = multer.diskStorage({
     destination: (req, file, cb)=>{
@@ -34,6 +44,11 @@ app.use(multer({ storage: fileStorage, fileFilter: fileFilter}).single('image'))
 
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> module_28
 app.use((error, req, res, next)=>{
     console.log(error);
     const status = error.statusCode || 500;
