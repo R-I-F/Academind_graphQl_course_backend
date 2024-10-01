@@ -7,17 +7,17 @@ module.exports = {
         const { email, password, name } = userInput;
         const errors = [];
         if(!validator.isEmail(email)){
-            const error = new Error('Email is invalid');
-            errors.push(error);
+            errors.push({message: 'Email is invalid'});
         }
 
         if(validator.isEmpty(password) || !validator.isLength(password, {min: 5})){
-            const error = new Error('Password is invalid, min 5 characters');
-            errors.push(error);
+            errors.push({message: 'Password is invalid, min 5 characters'});
         }
 
         if(errors.length > 0){
             const error = new Error('Invalid input');
+            error.data = errors;
+            error.code = 422;
             throw error;
         }
 
