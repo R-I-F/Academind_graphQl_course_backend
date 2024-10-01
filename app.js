@@ -21,7 +21,7 @@ app.use('/graphql', graphqlHTTP({
     schema: graphqlSchema,
     rootValue: graphqlResolver,
     graphiql: true,
-}))
+}));
 
 const fileStorage = multer.diskStorage({
     destination: (req, file, cb)=>{
