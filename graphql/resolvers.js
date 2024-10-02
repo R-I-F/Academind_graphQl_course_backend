@@ -38,6 +38,21 @@ module.exports = {
     },
 
     login: async function({ email, password }){
+        
+        const errors = [];
+        if(!validator.isEmail(email)){
+            errors.push({message: 'Invalid field data.'})
+        }
+        if(validator.isEmpty(password) || !validator.isLength(password, {min: 5})){
+            errors.push({message: 'Invalid field data'});
+        }
+        if(errors.length){
+            const error = new Error('Invalid data.');
+            error.data = errors
+            error.code = 422;
+            throw error; 
+        }
+
         const user = await User.findOne({email: email});
         if(!user){
             const error = new Error('User not found.');
