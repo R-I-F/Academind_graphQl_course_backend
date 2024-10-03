@@ -10,14 +10,17 @@ const cors = require('cors');
 const { graphqlHTTP } = require('express-graphql');
 const graphqlSchema = require('./graphql/schema');
 const graphqlResolver = require('./graphql/resolvers');
+const auth = require('./middleware/auth');
 
 
 app.use(cors());
+app.use(auth);
 
-app.use('/graphql', graphqlHTTP({
+app.use('/graphql', graphqlHTTP((req)=> ({
     schema: graphqlSchema,
     rootValue: graphqlResolver,
     graphiql: true,
+    context: { req },
     customFormatErrorFn(err){
         if(!err.originalError){
             return err;
@@ -27,7 +30,7 @@ app.use('/graphql', graphqlHTTP({
         const message = err.message || 'an error occurred';
         return { message: message, status: code, data: data };
     }
-}));
+})));
 
 const fileStorage = multer.diskStorage({
     destination: (req, file, cb)=>{
