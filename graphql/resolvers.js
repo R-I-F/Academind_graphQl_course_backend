@@ -46,6 +46,7 @@ module.exports = {
             throw error;
         }
         const { title, imageUrl, content, creator } = postInput;
+        console.log(imageUrl);
 
         const errors = [];
         if(validator.isEmpty(title) || !validator.isLength(title, {min: 5})){
@@ -67,7 +68,6 @@ module.exports = {
             error.code = 500;
             throw error;
         }
-
         const post = new Post({
             title: title,
             imageUrl: imageUrl,
@@ -97,6 +97,39 @@ module.exports = {
             updatedAt: postSaveResult.updatedAt.toISOString()
         }
     },
+
+    getPost: async function ({ postId }, { req }) {
+        try {
+            console.log("getting post");
+    
+            if (!req.isAuth) {
+                const error = new Error('Not authenticated.');
+                error.code = 401;
+                throw error;
+            }
+    
+            const post = await Post.findById(postId).populate('creator');
+    
+            if (!post) {
+                const error = new Error('No post found');
+                error.code = 404;
+                throw error;
+            }
+    
+            console.log("Post found:", post);
+    
+            return { 
+                ...post._doc, 
+                _id: post._id.toString(),
+                createdAt: post.createdAt.toISOString(),
+                updatedAt: post.updatedAt.toISOString()
+            };
+        } catch (err) {
+            console.error("Error in getPost:", err); // Log error for easier debugging
+            throw err;
+        }
+    },
+    
 
     login: async function({ email, password }, req){
 
