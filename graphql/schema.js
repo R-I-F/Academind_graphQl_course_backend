@@ -41,10 +41,15 @@ module.exports = buildSchema(`
         createUser(userInput: UserInputData): User!
         createPost(postInput: PostInputData): Post!
     }       
+
+    type PostData{
+        posts: [Post!]!
+        totalPosts: Int!
+    }
     
     type RootQuery{
         login(email: String!, password: String!): AuthData!
-        getPosts: [Post!]!
+        posts(page: Int!): PostData
         getUserStatus: String!
     }
 

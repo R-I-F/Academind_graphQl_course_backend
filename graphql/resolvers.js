@@ -39,6 +39,7 @@ module.exports = {
     },
 
     createPost: async function({ postInput }, { req }){
+        console.log('creating post');
         if(!req.isAuth){
             const error = new Error('Not authenticated.');
             error.code = 401;
@@ -133,12 +134,23 @@ module.exports = {
         return{ token: token,  userId: user._id.toString()};
     },
 
-    getPosts: async function(){
-        const posts = await Post.find().populate('creator');
-        if(!posts){
-            console.log('no posts found');
-            return [];
+    posts: async function({ page }, { req }){
+        if(!req.isAuth){
+            const error = new Error('Not authenticated.');
+            error.code = 401;
+            throw error;
         }
+        if(!page){
+            page = 1;
+        }
+
+        const perPage = 2;
+        
+        const postsCount = Post.find().countDocuments();
+        const posts = await Post.find().sort({createdAt: -1})
+        .skip((page-1) * perPage)
+        .limit(perPage)
+        .populate('creator');
         const postsArray = posts.map((post)=>{
             const userId = post.creator._id.toString();
             return {
@@ -150,7 +162,8 @@ module.exports = {
             }
         })
 
-        return postsArray;
+        return { posts: postsArray, totalPosts: postsCount };
+
     },
 
     getUserStatus: async function(args, { req }){
